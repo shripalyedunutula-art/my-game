@@ -1,715 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Presidential Command Center • Bharat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #020617; color: #f8fafc; font-family: monospace; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
 
-
-```jsx
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Shield, AlertTriangle, Cpu, Globe, DollarSign, Radio, 
-  Terminal, Lock, Send, ChevronRight, CheckCircle2, XCircle, 
-  Activity, Users, Zap, Compass, RefreshCw, Crosshair, Award
-} from 'lucide-react';
-
-// Audio Synthesizer via Web Audio API
-const playSound = (type) => {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    if (type === 'click') {
-      osc.frequency.setValueAtTime(440, ctx.currentTime);
-      gain.gain.setValueAtTime(0.05, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.05);
-    } else if (type === 'alert') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2);
-      gain.gain.setValueAtTime(0.1, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.2);
-    } else if (type === 'launch') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(150, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.5);
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    }
-  } catch (e) {
-    // Audio context not allowed without user interaction
-  }
-};
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState('incidents');
-  const [defcon, setDefcon] = useState(3);
-  const [presidentialFund, setPresidentialFund] = useState(50000); // Crores
-  const [approvalRating, setApprovalRating] = useState(74);
-
-  // Dynamic Incident Feed Engine
-  const [incidents, setIncidents] = useState([
-    {
-      id: 101,
-      time: '13:24 IST',
-      category: 'BORDER SECURITY',
-      severity: 'HIGH',
-      location: 'LAC Eastern Sector (Demchok)',
-      title: 'PLA Mechanized Column Mobilization',
-      description: 'Satellite reconnaissance detects 14 heavy armored personnel carriers and active EW jamming units 8km behind LAC line.',
-      status: 'PENDING',
-      customOrder: ''
-    },
-    {
-      id: 102,
-      time: '13:10 IST',
-      category: 'INTERNAL SECURITY',
-      severity: 'MEDIUM',
-      location: 'Punjab & Haryana Highway Border',
-      title: 'Farmer Transport Blockade Escalation',
-      description: 'Over 25,000 demonstrators blocking NH-44. Intelligence reports localized violent clashes with highway police.',
-      status: 'PENDING',
-      customOrder: ''
-    },
-    {
-      id: 103,
-      time: '12:45 IST',
-      category: 'CYBER WARFARE',
-      severity: 'HIGH',
-      location: 'CERT-In Command HQ',
-      title: 'Distributed Denial Attack on Power Grid',
-      description: 'DDoS attacks targeting Western Grid SCADA servers originating from foreign IP proxy clusters.',
-      status: 'PENDING',
-      customOrder: ''
-    }
-  ]);
-
-  // Diplomatic Hotline State
-  const [selectedLeader, setSelectedLeader] = useState('US');
-  const [diplomaticMessages, setDiplomaticMessages] = useState({
-    US: [{ sender: 'POTUS', text: 'Mr. President, we are observing high tension across your northern frontiers. The White House stands ready for intelligence sharing.', time: '12:00' }],
-    CHINA: [{ sender: 'Premier', text: 'New Delhi must exercise restraint near the boundary. Unilateral infrastructure expansion will trigger counter-deployments.', time: '11:30' }],
-    RUSSIA: [{ sender: 'Kremlin', text: 'Excellency, the delivery of your remaining S-400 regiments is on schedule despite global logistics pressures.', time: '10:15' }],
-    PAKISTAN: [{ sender: 'PM Office', text: 'We urge India to immediately halt military drills near the line of control to avoid unwanted escalation.', time: '09:40' }]
-  });
-  const [diplomaticInput, setDiplomaticInput] = useState('');
-  const [isTypingDiplomacy, setIsTypingDiplomacy] = useState(false);
-
-  // Missile & Defense Protocol State
-  const [selectedMissile, setSelectedMissile] = useState(null);
-  const [targetSector, setTargetSector] = useState('Northern Command');
-  const [missileLog, setMissileLog] = useState([
-    { time: '08:00 IST', system: 'S-400 Triumf (Regiment 3)', action: 'Status Lock: Active Radar Standby', target: 'Northern Sector' }
-  ]);
-
-  // RAW / IB Operatives
-  const [operatives, setOperatives] = useState([
-    { id: 'AGENT-701', agency: 'RAW', region: 'Beijing', status: 'DEEP COVER', mission: 'Stealth Recon' },
-    { id: 'AGENT-409', agency: 'RAW', region: 'Islamabad', status: 'ACTIVE', mission: 'SIGINT Intercept' },
-    { id: 'AGENT-112', agency: 'IB', region: 'Domestic (J&K)', status: 'ALERT', mission: 'Counter-Terror' },
-    { id: 'AGENT-305', agency: 'NTRO', region: 'Cyber Node Alpha', status: 'ONLINE', mission: 'Grid Protection' }
-  ]);
-
-  // Budget Allocation Sliders (in Lakh Crores)
-  const [budget, setBudget] = useState({
-    defense: 7.85,
-    tech: 2.10,
-    infra: 11.11,
-    agri: 1.25,
-    health: 0.90,
-    cyber: 0.45
-  });
-
-  // Auto-generate periodic emergency events
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const templates = [
-        { cat: 'DIPLOMATIC', title: 'Indian Ocean Naval Rights Request', desc: 'Island nation requests immediate $1.5B loan package or foreign power gains naval docking access.' },
-        { cat: 'JUDICIAL', title: 'Constitutional Bench Ruling on Tech Monopoly', desc: 'Supreme Court bench demands executive policy directive on foreign cloud storage providers.' },
-        { cat: 'ECONOMIC', title: 'Global Crude Price Surge Alert', desc: 'Middle East supply disruptions threaten ₹12,000 Cr additional fuel import subsidy load.' },
-        { cat: 'INTERNAL', title: 'Naxalite Corridor Intelligence Sweep', desc: 'Special Forces request air strike approval on heavy insurgents camp deep in Bastar forests.' }
-      ];
-      const pick = templates[Math.floor(Math.random() * templates.length)];
-      const newEvt = {
-        id: Date.now(),
-        time: new Date().toLocaleTimeString('en-IN', { hour12: false, hour: '2-digit', minute: '2-digit' }) + ' IST',
-        category: pick.cat,
-        severity: Math.random() > 0.5 ? 'HIGH' : 'MEDIUM',
-        location: 'National Command Center',
-        title: pick.title,
-        description: pick.desc,
-        status: 'PENDING',
-        customOrder: ''
-      };
-      setIncidents(prev => [newEvt, ...prev.slice(0, 7)]);
-      playSound('alert');
-    }, 45000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Handle Presidential Incident Decrees
-  const handleIncidentAction = (id, actionType, text = '') => {
-    playSound('click');
-    setIncidents(prev => prev.map(inc => {
-      if (inc.id === id) {
-        return { 
-          ...inc, 
-          status: actionType === 'AUTHORIZED' ? 'AUTHORIZED' : actionType === 'VETOED' ? 'VETOED' : 'EXECUTED',
-          resolutionText: text || (actionType === 'AUTHORIZED' ? 'Executive Authorization Granted.' : 'Presidential Veto Applied.')
-        };
-      }
-      return inc;
-    }));
-
-    // Adjust national metric impacts dynamically
-    if (actionType === 'AUTHORIZED') setApprovalRating(r => Math.min(100, r + 1));
-    if (actionType === 'VETOED') setApprovalRating(r => Math.max(10, r - 1));
-  };
-
-  // Dynamic AI-Simulated Diplomatic Response Engine
-  const sendDiplomaticMessage = () => {
-    if (!diplomaticInput.trim()) return;
-    playSound('click');
-
-    const userMsg = diplomaticInput;
-    const currentLeader = selectedLeader;
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-    setDiplomaticMessages(prev => ({
-      ...prev,
-      [currentLeader]: [...(prev[currentLeader] || []), { sender: 'President of India', text: userMsg, time: timeStr }]
-    }));
-    setDiplomaticInput('');
-    setIsTypingDiplomacy(true);
-
-    // Contextual Dynamic Reply Logic
-    setTimeout(() => {
-      setIsTypingDiplomacy(false);
-      playSound('alert');
-
-      let replyText = "";
-      const lower = userMsg.toLowerCase();
-
-      if (currentLeader === 'US') {
-        if (lower.includes('trade') || lower.includes('tariffs') || lower.includes('money')) {
-          replyText = "The White House is open to lowering bilateral tariffs, provided Indian markets streamline tech imports.";
-        } else if (lower.includes('war') || lower.includes('strike') || lower.includes('china') || lower.includes('pakistan')) {
-          replyText = "Washington advises maximum strategic caution. We offer satellite feed feeds to support Indian Defense Forces.";
-        } else {
-          replyText = "We have received your presidential directive. The State Department will align our strategic partnership accordingly.";
-        }
-      } else if (currentLeader === 'CHINA') {
-        if (lower.includes('withdraw') || lower.includes('lac') || lower.includes('border')) {
-          replyText = "Border disengagement requires mutual compliance. Beijing will not step back while forward Indian positions remain heavily armed.";
-        } else if (lower.includes('peace') || lower.includes('talks')) {
-          replyText = "We welcome peaceful dialogue, provided India respects Chinese core territorial interests in the region.";
-        } else {
-          replyText = "Your message has been conveyed to the Central Military Commission. Beijing expects balanced actions.";
-        }
-      } else if (currentLeader === 'RUSSIA') {
-        if (lower.includes('arms') || lower.includes('missile') || lower.includes('oil') || lower.includes('s-400')) {
-          replyText = "Moscow stands firm behind our defense pact. Fast-track deliveries of strategic gear remain our top priority.";
-        } else {
-          replyText = "Spasibo, Mr. President. Russia values India's independent geopolitical stance on the world stage.";
-        }
-      } else if (currentLeader === 'PAKISTAN') {
-        if (lower.includes('terror') || lower.includes('attack') || lower.includes('strike')) {
-          replyText = "We reject unverified claims. Any military adventurism across the Line of Control will be met with full defense mobilization.";
-        } else {
-          replyText = "Diplomatic channels are open, but national sovereignty will be defended at all costs.";
-        }
-      }
-
-      setDiplomaticMessages(prev => ({
-        ...prev,
-        [currentLeader]: [...(prev[currentLeader] || []), { sender: currentLeader, text: replyText, time: timeStr }]
-      }));
-    }, 2000);
-  };
-
-  // Missile Launch Protocol Handler
-  const executeMissileAction = (systemName) => {
-    playSound('launch');
-    const timeStr = new Date().toLocaleTimeString('en-IN') + ' IST';
-    setMissileLog(prev => [
-      { time: timeStr, system: systemName, action: 'EXECUTIVE LAUNCH COMMAND ISSUED', target: targetSector },
-      ...prev
-    ]);
-    setSelectedMissile(null);
-  };
-
-  // Covert Operative Dispatch
-  const dispatchOperative = (id) => {
-    playSound('click');
-    setOperatives(prev => prev.map(op => {
-      if (op.id === id) {
-        return { ...op, status: op.status === 'DEEP COVER' ? 'EXTRACTION' : 'DEEP COVER' };
-      }
-      return op;
-    }));
-  };
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans flex flex-col selection:bg-red-900 selection:text-white">
-      {/* TOP COMMAND HEADER */}
-      <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-red-950 border border-red-600/50 flex items-center justify-center text-red-500 shadow-lg shadow-red-950/50 animate-pulse">
-            <Shield className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black tracking-widest bg-gradient-to-r from-red-500 via-orange-400 to-amber-200 bg-clip-text text-transparent uppercase">
-              Supreme Command Center • Bharat
-            </h1>
-            <p className="text-xs text-slate-400 font-mono flex items-center gap-2">
-              <span>PRESIDENT & SUPREME COMMANDER OFFICE</span>
-              <span className="text-emerald-400">● LIVE ENCRYPTED</span>
-            </p>
-          </div>
-        </div>
-
-        {/* METRIC BADGES */}
-        <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="bg-slate-800/80 px-3 py-1.5 rounded border border-slate-700 flex items-center gap-2">
-            <span className="text-slate-400">DEFCON:</span>
-            <span className={`font-bold px-2 py-0.5 rounded ${defcon <= 2 ? 'bg-red-600 text-white animate-bounce' : 'bg-amber-500/20 text-amber-400'}`}>
-              LEVEL {defcon}
-            </span>
-            <div className="flex gap-1 ml-1">
-              {[1, 2, 3, 4, 5].map(lvl => (
-                <button 
-                  key={lvl}
-                  onClick={() => { setDefcon(lvl); playSound('click'); }}
-                  className={`w-4 h-4 text-[9px] font-bold rounded ${defcon === lvl ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                >
-                  {lvl}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="bg-slate-800/80 px-3 py-1.5 rounded border border-slate-700 flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-emerald-400" />
-            <span className="text-slate-400">PRESIDENTIAL RESERVE:</span>
-            <span className="text-emerald-400 font-bold">₹{presidentialFund.toLocaleString()} CR</span>
-          </div>
-
-          <div className="bg-slate-800/80 px-3 py-1.5 rounded border border-slate-700 flex items-center gap-2">
-            <Award className="w-4 h-4 text-cyan-400" />
-            <span className="text-slate-400">APPROVAL:</span>
-            <span className="text-cyan-400 font-bold">{approvalRating}%</span>
-          </div>
-        </div>
-      </header>
-
-      {/* NAVIGATION TABS */}
-      <nav className="bg-slate-900 border-b border-slate-800 px-6 flex gap-2 overflow-x-auto">
-        {[
-          { id: 'incidents', label: 'Incidents & Orders', icon: AlertTriangle, count: incidents.filter(i => i.status === 'PENDING').length },
-          { id: 'missiles', label: 'Missile & Strategic Defense', icon: Crosshair },
-          { id: 'diplomacy', label: 'Diplomatic Hotline', icon: Globe },
-          { id: 'covert', label: 'RAW & IB Intelligence', icon: Radio },
-          { id: 'budget', label: 'Budget & Resource Pool', icon: Cpu }
-        ].map(tab => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => { setActiveTab(tab.id); playSound('click'); }}
-              className={`flex items-center gap-2 py-3 px-4 border-b-2 font-mono text-xs uppercase tracking-wider transition-colors whitespace-nowrap ${
-                isActive 
-                  ? 'border-red-500 text-red-400 bg-red-950/20 font-bold' 
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-              {tab.count > 0 && (
-                <span className="bg-red-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* MAIN CONTENT WORKSPACE */}
-      <main className="flex-1 p-6 max-w-7xl w-full mx-auto">
-
-        {/* TAB 1: INCIDENTS FEED & CUSTOM EXECUTIVE ORDERS */}
-        {activeTab === 'incidents' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center bg-slate-900 p-4 rounded-lg border border-slate-800">
-              <div>
-                <h2 className="text-lg font-bold font-mono text-slate-100 uppercase tracking-wide flex items-center gap-2">
-                  <Activity className="w-5 h-5 text-red-500" /> Executive Incident Command Feed
-                </h2>
-                <p className="text-xs text-slate-400 font-mono">Continuous stream of domestic, border, and geopolitical issues requiring your directive.</p>
-              </div>
-              <div className="text-xs font-mono bg-red-950/40 text-red-400 border border-red-800/40 px-3 py-1.5 rounded flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-                ACTIVE MONITORING PROTOCOL
-              </div>
-            </div>
-
-            <div className="grid gap-4">
-              {incidents.map(inc => (
-                <div 
-                  key={inc.id}
-                  className={`border rounded-lg p-5 transition-all bg-slate-900/60 ${
-                    inc.status === 'PENDING' 
-                      ? 'border-red-900/60 shadow-lg shadow-red-950/20' 
-                      : inc.status === 'AUTHORIZED' 
-                        ? 'border-emerald-900/40 opacity-80' 
-                        : 'border-slate-800 opacity-60'
-                  }`}
-                >
-                  <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold uppercase ${
-                        inc.severity === 'HIGH' ? 'bg-red-950 text-red-400 border border-red-800' : 'bg-amber-950 text-amber-400 border border-amber-800'
-                      }`}>
-                        {inc.severity} RISK
-                      </span>
-                      <span className="text-xs font-mono text-cyan-400 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/40">
-                        {inc.category}
-                      </span>
-                      <span className="text-xs font-mono text-slate-400">📍 {inc.location}</span>
-                    </div>
-                    <span className="text-xs font-mono text-slate-500">{inc.time}</span>
-                  </div>
-
-                  <h3 className="text-base font-bold text-slate-100 mb-1">{inc.title}</h3>
-                  <p className="text-sm text-slate-300 font-mono mb-4 bg-slate-950/50 p-3 rounded border border-slate-800/60">
-                    {inc.description}
-                  </p>
-
-                  {inc.status === 'PENDING' ? (
-                    <div className="space-y-3 border-t border-slate-800 pt-3">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => handleIncidentAction(inc.id, 'AUTHORIZED')}
-                          className="px-4 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-mono font-bold rounded flex items-center gap-1.5"
-                        >
-                          <CheckCircle2 className="w-4 h-4" /> GRANT AUTHORIZATION
-                        </button>
-                        <button
-                          onClick={() => handleIncidentAction(inc.id, 'VETOED')}
-                          className="px-4 py-2 bg-red-900 hover:bg-red-800 text-red-200 text-xs font-mono font-bold rounded flex items-center gap-1.5"
-                        >
-                          <XCircle className="w-4 h-4" /> DENY / VETO ORDER
-                        </button>
-                      </div>
-
-                      {/* Custom Presidential Decree Console */}
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          placeholder="Type your custom executive order solution here..."
-                          value={inc.customOrder}
-                          onChange={(e) => {
-                            const val = e.target.value;
-                            setIncidents(prev => prev.map(item => item.id === inc.id ? { ...item, customOrder: val } : item));
-                          }}
-                          className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-1.5 text-xs font-mono text-slate-100 focus:outline-none focus:border-cyan-500"
-                        />
-                        <button
-                          onClick={() => {
-                            if (inc.customOrder.trim()) {
-                              handleIncidentAction(inc.id, 'CUSTOM', inc.customOrder);
-                            }
-                          }}
-                          className="px-4 py-1.5 bg-cyan-800 hover:bg-cyan-700 text-white text-xs font-mono font-bold rounded flex items-center gap-1"
-                        >
-                          <Send className="w-3.5 h-3.5" /> EXECUTE ORDER
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border-t border-slate-800 pt-2 flex items-center gap-2 font-mono text-xs">
-                      <span className="text-slate-400">STATUS:</span>
-                      <span className={`font-bold ${inc.status === 'AUTHORIZED' ? 'text-emerald-400' : inc.status === 'VETOED' ? 'text-red-400' : 'text-cyan-400'}`}>
-                        [{inc.status}] — {inc.resolutionText}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: STRATEGIC MISSILE & AIR DEFENSE COMMAND */}
-        {activeTab === 'missiles' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-bold font-mono text-slate-100 uppercase tracking-wide flex items-center gap-2">
-                  <Crosshair className="w-5 h-5 text-red-500" /> Strategic Rocket Forces & Air Defense (S-400 / Agni-V)
-                </h2>
-                <p className="text-xs text-slate-400 font-mono">Authorize tactical deployments, defensive radar tracking, or strategic missile strikes.</p>
-              </div>
-              <div className="font-mono text-xs text-amber-400 bg-amber-950/40 border border-amber-800/40 px-3 py-1">
-                PRESIDENTIAL LAUNCH KEY: UNLOCKED
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Missile Arsenal Options */}
-              {[
-                { name: 'BrahMos Cruise Missile', type: 'Supersonic / Precision Strike', range: '450 km', status: 'READY' },
-                { name: 'Agni-V ICBM', type: 'Strategic Intercontinental (MIRV)', range: '5,500+ km', status: 'KEY LOCKED' },
-                { name: 'S-400 Triumf Regiment', type: 'Long-Range Air Defense System', range: '400 km Shield', status: 'ACTIVE RADAR' }
-              ].map((m, idx) => (
-                <div key={idx} className="bg-slate-900 border border-slate-800 rounded-lg p-5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-mono text-slate-400 uppercase">{m.type}</span>
-                      <span className="text-[10px] font-mono bg-emerald-950 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded font-bold">
-                        {m.status}
-                      </span>
-                    </div>
-                    <h3 className="text-base font-bold text-slate-100">{m.name}</h3>
-                    <p className="text-xs font-mono text-slate-400 mt-1">Operational Range: {m.range}</p>
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t border-slate-800 space-y-2">
-                    <label className="text-[10px] font-mono text-slate-400 block">SELECT TARGET SECTOR:</label>
-                    <select 
-                      value={targetSector} 
-                      onChange={(e) => setTargetSector(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 text-xs font-mono text-slate-200 p-2 rounded mb-2"
-                    >
-                      <option>Northern Command (Ladakh / LAC)</option>
-                      <option>Western Command (LoC Border)</option>
-                      <option>Eastern Naval Command (Bay of Bengal)</option>
-                      <option>Southern Air Command (Indian Ocean)</option>
-                    </select>
-
-                    <button
-                      onClick={() => executeMissileAction(m.name)}
-                      className="w-full py-2 bg-red-950 hover:bg-red-900 text-red-200 border border-red-700 font-mono text-xs font-bold rounded flex items-center justify-center gap-2"
-                    >
-                      <Zap className="w-4 h-4 text-red-500" /> ISSUE EXECUTIVE COMMAND
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Strategic Command Audit Log */}
-            <div className="bg-slate-900 border border-slate-800 rounded-lg p-5">
-              <h3 className="text-xs font-mono font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-cyan-400" /> Strategic Defense Audit Protocol
-              </h3>
-              <div className="bg-slate-950 rounded border border-slate-800/80 p-3 font-mono text-xs space-y-2 max-h-48 overflow-y-auto">
-                {missileLog.map((log, i) => (
-                  <div key={i} className="flex justify-between border-b border-slate-900 pb-1 text-slate-300">
-                    <span className="text-slate-500">{log.time}</span>
-                    <span className="text-cyan-400 font-bold">{log.system}</span>
-                    <span className="text-amber-400">{log.target}</span>
-                    <span className="text-red-400 font-bold">{log.action}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: DIPLOMATIC HOTLINE */}
-        {activeTab === 'diplomacy' && (
-          <div className="grid md:grid-cols-4 gap-6 h-[550px]">
-            {/* World Leaders Roster */}
-            <div className="bg-slate-900 border border-slate-800 rounded-lg p-4 space-y-2">
-              <h3 className="text-xs font-mono font-bold text-slate-400 uppercase mb-3 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-cyan-400" /> Direct Heads of State
-              </h3>
-              {[
-                { id: 'US', label: 'United States', title: 'President of the USA' },
-                { id: 'CHINA', label: 'China', title: 'Premier of the PRC' },
-                { id: 'RUSSIA', label: 'Russia', title: 'President of Russia' },
-                { id: 'PAKISTAN', label: 'Pakistan', title: 'Prime Minister of Pak' }
-              ].map(leader => (
-                <button
-                  key={leader.id}
-                  onClick={() => { setSelectedLeader(leader.id); playSound('click'); }}
-                  className={`w-full text-left p-3 rounded font-mono text-xs transition-colors border ${
-                    selectedLeader === leader.id
-                      ? 'bg-red-950/40 border-red-700 text-slate-100 font-bold'
-                      : 'bg-slate-950/40 border-slate-800 text-slate-400 hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="text-sm font-bold text-slate-200">{leader.label}</div>
-                  <div className="text-[10px] text-slate-500">{leader.title}</div>
-                </button>
-              ))}
-            </div>
-
-            {/* Encrypted Cable Console */}
-            <div className="md:col-span-3 bg-slate-900 border border-slate-800 rounded-lg flex flex-col justify-between p-4">
-              <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
-                <div>
-                  <h3 className="font-mono text-sm font-bold text-slate-100">
-                    ENCRYPTED DIPLOMATIC LINE: <span className="text-red-400">{selectedLeader}</span>
-                  </h3>
-                  <p className="text-[10px] font-mono text-slate-500">256-BIT QUANTUM ENCRYPTED TRANSMISSION PROTOCOL</p>
-                </div>
-                <span className="text-xs font-mono text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded">
-                  ONLINE
-                </span>
-              </div>
-
-              {/* Message History */}
-              <div className="flex-1 overflow-y-auto py-4 space-y-3 font-mono text-xs">
-                {(diplomaticMessages[selectedLeader] || []).map((msg, i) => (
-                  <div 
-                    key={i} 
-                    className={`p-3 rounded-lg max-w-xl ${
-                      msg.sender === 'President of India' 
-                        ? 'ml-auto bg-cyan-950/60 border border-cyan-800/50 text-slate-100' 
-                        : 'mr-auto bg-slate-950 border border-slate-800 text-amber-200'
-                    }`}
-                  >
-                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                      <span className="font-bold">{msg.sender}</span>
-                      <span>{msg.time}</span>
-                    </div>
-                    <p className="text-xs leading-relaxed">{msg.text}</p>
-                  </div>
-                ))}
-                {isTypingDiplomacy && (
-                  <div className="text-xs font-mono text-slate-500 animate-pulse">
-                    [Incoming Diplomatic Response Cable deciphering...]
-                  </div>
-                )}
-              </div>
-
-              {/* Input console */}
-              <div className="border-t border-slate-800 pt-3 flex gap-2">
-                <input
-                  type="text"
-                  placeholder={`Type direct message to ${selectedLeader}...`}
-                  value={diplomaticInput}
-                  onChange={(e) => setDiplomaticInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendDiplomaticMessage()}
-                  className="flex-1 bg-slate-950 border border-slate-700 rounded px-3 py-2 text-xs font-mono text-slate-100 focus:outline-none focus:border-red-500"
-                />
-                <button
-                  onClick={sendDiplomaticMessage}
-                  className="px-5 py-2 bg-red-900 hover:bg-red-800 text-white text-xs font-mono font-bold rounded flex items-center gap-1.5"
-                >
-                  <Send className="w-3.5 h-3.5" /> TRANSMIT
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: RAW & IB INTELLIGENCE HUB */}
-        {activeTab === 'covert' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 p-4 rounded-lg border border-slate-800 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-bold font-mono text-slate-100 uppercase tracking-wide flex items-center gap-2">
-                  <Radio className="w-5 h-5 text-red-500" /> RAW / IB / NTRO Intelligence Operations
-                </h2>
-                <p className="text-xs text-slate-400 font-mono">Monitor deep-cover assets, intercept foreign telemetry, and execute covert directives.</p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4">
-              {operatives.map(op => (
-                <div key={op.id} className="bg-slate-900 border border-slate-800 rounded-lg p-4 flex justify-between items-center">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-mono text-sm font-bold text-cyan-400">{op.id}</span>
-                      <span className="text-[10px] font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded">{op.agency}</span>
-                    </div>
-                    <p className="text-xs font-mono text-slate-300">Station Sector: {op.region}</p>
-                    <p className="text-xs font-mono text-slate-500">Current Task: {op.mission}</p>
-                  </div>
-
-                  <div className="text-right space-y-2">
-                    <div className="text-xs font-mono font-bold text-emerald-400">{op.status}</div>
-                    <button
-                      onClick={() => dispatchOperative(op.id)}
-                      className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-mono rounded border border-slate-700"
-                    >
-                      TOGGLE MISSION
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* TAB 5: UNION BUDGET & RESOURCE POOL */}
-        {activeTab === 'budget' && (
-          <div className="space-y-6">
-            <div className="bg-slate-900 p-4 rounded-lg border border-slate-800">
-              <h2 className="text-lg font-bold font-mono text-slate-100 uppercase tracking-wide flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-emerald-500" /> Union Budget Allocation Console (₹50.65 Lakh Crore Pool)
-              </h2>
-              <p className="text-xs text-slate-400 font-mono">Reallocate capital across key national pillars. Dynamic changes affect national stability.</p>
-            </div>
-
-            <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 space-y-6">
-              {[
-                { key: 'defense', label: 'Defense & Military Modernization', value: budget.defense, unit: 'Lakh Cr' },
-                { key: 'tech', label: 'Artificial Intelligence & Semiconductor Mission', value: budget.tech, unit: 'Lakh Cr' },
-                { key: 'infra', label: 'National Highways & Freight Corridors', value: budget.infra, unit: 'Lakh Cr' },
-                { key: 'agri', label: 'Agricultural Price Subsidy Pool', value: budget.agri, unit: 'Lakh Cr' },
-                { key: 'health', label: 'Public Health & Bio-Security', value: budget.health, unit: 'Lakh Cr' },
-                { key: 'cyber', label: 'National Cyber Security Shield', value: budget.cyber, unit: 'Lakh Cr' }
-              ].map(item => (
-                <div key={item.key} className="space-y-2">
-                  <div className="flex justify-between font-mono text-xs">
-                    <span className="text-slate-200 font-bold">{item.label}</span>
-                    <span className="text-emerald-400 font-bold">₹{item.value.toFixed(2)} {item.unit}</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="15.0"
-                    step="0.05"
-                    value={item.value}
-                    onChange={(e) => {
-                      const val = parseFloat(e.target.value);
-                      setBudget(prev => ({ ...prev, [item.key]: val }));
-                    }}
-                    className="w-full accent-red-600 bg-slate-950 h-2 rounded cursor-pointer"
-                  />
-                </div>
-              ))}
-
-              <div className="pt-4 border-t border-slate-800 flex justify-end">
-                <button
-                  onClick={() => playSound('click')}
-                  className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-600 text-white font-mono text-xs font-bold rounded"
-                >
-                  APPLY RE-ALLOCATION DIRECTIVE
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-      </main>
-
-      {/* FOOTER AUDIT BAR */}
-      <footer className="border-t border-slate-800 bg-slate-950 px-6 py-2 text-center text-slate-600 text-[10px] font-mono">
-        PRESIDENTIAL COMMAND CENTER • BHARAT SUPREME COMMAND • CLASSIFIED EXECUTIVE INTERFACE
-      </footer>
+  <!-- HEADER -->
+  <header class="border-b border-slate-800 bg-slate-900/90 px-6 py-3 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50">
+    <div>
+      <h1 class="text-xl font-black tracking-widest text-red-500 uppercase">
+        Supreme Command Center • Bharat
+      </h1>
+      <p class="text-xs text-slate-400">
+        PRESIDENT & SUPREME COMMANDER OFFICE | <span class="text-emerald-400">● LIVE ENCRYPTED</span>
+      </p>
     </div>
-  );
-}
 
-```
+    <!-- METRICS -->
+    <div class="flex items-center gap-4 text-xs">
+      <div class="bg-slate-800 px-3 py-1.5 rounded border border-slate-700">
+        DEFCON: <span id="defcon-display" class="font-bold text-red-400">LEVEL 3</span>
+      </div>
+      <div class="bg-slate-800 px-3 py-1.5 rounded border border-slate-700">
+        RESERVE: <span id="reserve-display" class="text-emerald-400 font-bold">₹50,000 CR</span>
+      </div>
+      <div class="bg-slate-800 px-3 py-1.5 rounded border border-slate-700">
+        APPROVAL: <span id="approval-display" class="text-cyan-400 font-bold">74%</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- NAVIGATION -->
+  <nav class="bg-slate-900 border-b border-slate-800 px-6 flex gap-2 overflow-x-auto">
+    <button onclick="switchTab('incidents')" class="tab-btn py-3 px-4 text-xs uppercase font-bold text-red-400 border-b-2 border-red-500">Incidents Feed</button>
+    <button onclick="switchTab('missiles')" class="tab-btn py-3 px-4 text-xs uppercase text-slate-400 border-b-2 border-transparent">Missile Command</button>
+    <button onclick="switchTab('diplomacy')" class="tab-btn py-3 px-4 text-xs uppercase text-slate-400 border-b-2 border-transparent">Diplomatic Hotline</button>
+    <button onclick="switchTab('covert')" class="tab-btn py-3 px-4 text-xs uppercase text-slate-400 border-b-2 border-transparent">RAW Intel Hub</button>
+    <button onclick="switchTab('budget')" class="tab-btn py-3 px-4 text-xs uppercase text-slate-400 border-b-2 border-transparent">Union Budget</button>
+  </nav>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="flex-1 p-6 max-w-7xl w-full mx-auto">
+
+    <!-- TAB 1: INCIDENTS -->
+    <div id="incidents" class="tab-content active space-y-6">
+      <div class="bg-slate-900 p-4 rounded border border-slate-800 flex justify-between items-center">
+        <h2 class="text-sm font-bold text-slate-100 uppercase">🚨 Executive Incident Feed</h2>
+        <span class="text-xs text-red-400 bg-red-950/50 px-2 py-1 rounded">LIVE DISPATCH SYSTEM</span>
+      </div>
+
+      <div id="incidents-container" class="space-y-4">
+        <!-- Incident Cards Will Render Here -->
+      </div>
+    </div>
+
+    <!-- TAB 2: MISSILES -->
+    <div id="missiles" class="tab-content space-y-6">
+      <div class="bg-slate-900 p-4 rounded border border-slate-800">
+        <h2 class="text-sm font-bold text-slate-100 uppercase">🎯 Strategic Rocket & Air Defense Protocol</h2>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="bg-slate-900 p-5 rounded border border-slate-800">
+          <h3 class="font-bold text-slate-200">BrahMos Supersonic Cruise</h3>
+          <p class="text-xs text-slate-400 mt-1">Range: 450 km | Status: READY</p>
+          <button onclick="launchMissile('BrahMos')" class="w-full mt-4 py-2 bg-red-950 border border-red-700 text-red-200 text-xs font-bold rounded">LAUNCH STRIKE</button>
+        </div>
+        <div class="bg-slate-900 p-5 rounded border border-slate-800">
+          <h3 class="font-bold text-slate-200">Agni-V ICBM (MIRV)</h3>
+          <p class="text-xs text-slate-400 mt-1">Range: 5,500 km | Status: ARMED</p>
+          <button onclick="launchMissile('Agni-V')" class="w-full mt-4 py-2 bg-red-950 border border-red-700 text-red-200 text-xs font-bold rounded">EXECUTE STRATEGIC COMMAND</button>
+        </div>
+        <div class="bg-slate-900 p-5 rounded border border-slate-800">
+          <h3 class="font-bold text-slate-200">S-400 Air Defense Grid</h3>
+          <p class="text-xs text-slate-400 mt-1">Shield: 400 km | Status: ACTIVE RADAR</p>
+          <button onclick="launchMissile('S-400 Shield')" class="w-full mt-4 py-2 bg-emerald-950 border border-emerald-700 text-emerald-200 text-xs font-bold rounded">ACTIVATE FULL INTERCEPT</button>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 p-4 rounded border border-slate-800">
+        <h3 class="text-xs font-bold text-slate-400 uppercase mb-2">Command Strike Audit Log</h3>
+        <div id="missile-log" class="bg-slate-950 p-3 rounded text-xs space-y-1 max-h-40 overflow-y-auto">
+          <div class="text-slate-500">[SYSTEM READY] Strategic Missile Protocol Operational.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DIPLOMACY -->
+    <div id="diplomacy" class="tab-content">
+      <div class="grid md:grid-cols-4 gap-6 h-[500px]">
+        <div class="bg-slate-900 p-4 rounded border border-slate-800 space-y-2">
+          <h3 class="text-xs font-bold text-slate-400 uppercase mb-3">Target Leaders</h3>
+          <button onclick="selectLeader('US')" class="w-full text-left p-2 rounded bg-slate-800 text-xs">USA (POTUS)</button>
+          <button onclick="selectLeader('CHINA')" class="w-full text-left p-2 rounded bg-slate-950 text-xs">China (Premier)</button>
+          <button onclick="selectLeader('RUSSIA')" class="w-full text-left p-2 rounded bg-slate-950 text-xs">Russia (Kremlin)</button>
+          <button onclick="selectLeader('PAKISTAN')" class="w-full text-left p-2 rounded bg-slate-950 text-xs">Pakistan (PM Office)</button>
+        </div>
+
+        <div class="md:col-span-3 bg-slate-900 p-4 rounded border border-slate-800 flex flex-col justify-between">
+          <div className="border-b border-slate-800 pb-2">
+            <h3 class="text-xs font-bold text-cyan-400">ENCRYPTED DIPLOMATIC HOTLINE: <span id="current-leader">US</span></h3>
+          </div>
+
+          <div id="diplomatic-chat" class="flex-1 my-4 space-y-3 overflow-y-auto bg-slate-950 p-3 rounded">
+            <div class="text-amber-200 text-xs bg-slate-900 p-2 rounded">POTUS: Mr. President, we are observing high tension on your borders. The White House stands ready.</div>
+          </div>
+
+          <div class="flex gap-2">
+            <input id="diplomatic-input" type="text" placeholder="Type direct diplomatic cable message..." class="flex-1 bg-slate-950 border border-slate-700 px-3 py-2 text-xs rounded text-white focus:outline-none" />
+            <button onclick="sendDiplomaticMsg()" class="bg-red-900 px-4 py-2 text-xs font-bold rounded">TRANSMIT</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: COVERT INTEL -->
+    <div id="covert" class="tab-content space-y-4">
+      <div class="bg-slate-900 p-4 rounded border border-slate-800">
+        <h2 class="text-sm font-bold text-slate-100 uppercase">🕵️ RAW & IB Deep-Cover Network</h2>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="bg-slate-900 p-4 rounded border border-slate-800 flex justify-between items-center">
+          <div>
+            <div class="text-sm font-bold text-cyan-400">AGENT-701 (RAW)</div>
+            <div class="text-xs text-slate-400">Station: Beijing | Mission: Reconnaissance</div>
+          </div>
+          <span class="text-xs text-emerald-400 font-bold">DEEP COVER</span>
+        </div>
+        <div class="bg-slate-900 p-4 rounded border border-slate-800 flex justify-between items-center">
+          <div>
+            <div class="text-sm font-bold text-cyan-400">AGENT-409 (IB)</div>
+            <div class="text-xs text-slate-400">Station: Domestic | Mission: Counter-Terror</div>
+          </div>
+          <span class="text-xs text-amber-400 font-bold">ACTIVE MONITORING</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: BUDGET -->
+    <div id="budget" class="tab-content space-y-6">
+      <div class="bg-slate-900 p-4 rounded border border-slate-800">
+        <h2 class="text-sm font-bold text-slate-100 uppercase">💰 Union Budget Re-allocation Console</h2>
+      </div>
+
+      <div class="bg-slate-900 p-6 rounded border border-slate-800 space-y-4 text-xs">
+        <div>
+          <div class="flex justify-between mb-1">
+            <span>Defense Modernization:</span>
+            <span class="text-emerald-400 font-bold">₹7.85 Lakh Cr</span>
+          </div>
+          <input type="range" class="w-full accent-red-500" min="1" max="15" value="7.85">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <span>Highways & Infrastructure:</span>
+            <span class="text-emerald-400 font-bold">₹11.11 Lakh Cr</span>
+          </div>
+          <input type="range" class="w-full accent-red-500" min="1" max="20" value="11.11">
+        </div>
+        <div>
+          <div class="flex justify-between mb-1">
+            <span>Agriculture & Subsidies:</span>
+            <span class="text-emerald-400 font-bold">₹1.25 Lakh Cr</span>
+          </div>
+          <input type="range" class="w-full accent-red-500" min="1" max="10" value="1.25">
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- SCRIPT ENGINE -->
+  <script>
+    // State Data
+    let approval = 74;
+    let selectedLeaderCode = 'US';
+    
+    let incidentsList = [
+      { id: 1, title: 'PLA Mechanized Column Mobilization', loc: 'LAC Ladakh Sector', desc: 'Satellite confirms 14 armored vehicles 8km behind line.', status: 'PENDING' },
+      { id: 2, title: 'Highway Farmer Transport Blockade', loc: 'Punjab/Haryana Line', desc: '25,000 demonstrators blocking main logistics arteries.', status: 'PENDING' },
+      { id: 3, title: 'Cyber Attack on SCADA Power Grid', loc: 'CERT-In HQ', desc: 'Foreign IP cluster launching high-density DDoS attacks.', status: 'PENDING' }
+    ];
+
+    // Tab Switcher
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-red-500', 'text-red-400');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+      
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('border-red-500', 'text-red-400');
+      event.currentTarget.classList.remove('border-transparent', 'text-slate-400');
+    }
+
+    // Render Incidents
+    function renderIncidents() {
+      const container = document.getElementById('incidents-container');
+      container.innerHTML = '';
+
+      incidentsList.forEach(inc => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-900/80 p-5 rounded border border-slate-800 space-y-3";
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <h3 class="font-bold text-slate-100">${inc.title}</h3>
+            <span class="text-xs text-slate-400 font-mono">📍 ${inc.loc}</span>
+          </div>
+          <p class="text-xs text-slate-300 bg-slate-950 p-2 rounded border border-slate-800">${inc.desc}</p>
+          ${inc.status === 'PENDING' ? `
+            <div class="flex gap-2">
+              <button onclick="resolveIncident(${inc.id}, 'GRANT AUTHORIZATION')" class="bg-emerald-800 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded font-bold">GRANT AUTHORIZATION</button>
+              <button onclick="resolveIncident(${inc.id}, 'PRESIDENTIAL VETO')" class="bg-red-900 hover:bg-red-800 text-white text-xs px-3 py-1.5 rounded font-bold">VETO</button>
+            </div>
+            <div class="flex gap-2 mt-2">
+              <input id="custom-${inc.id}" type="text" placeholder="Type custom executive order solution..." class="flex-1 bg-slate-950 border border-slate-700 text-xs px-3 py-1 rounded text-white" />
+              <button onclick="resolveCustom(${inc.id})" class="bg-cyan-800 text-white text-xs px-3 py-1 rounded font-bold">EXECUTE</button>
+            </div>
+          ` : `
+            <div class="text-xs font-bold text-cyan-400">STATUS: [${inc.status}]</div>
+          `}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function resolveIncident(id, text) {
+      incidentsList = incidentsList.map(item => item.id === id ? { ...item, status: text } : item);
+      approval = Math.min(100, approval + 1);
+      document.getElementById('approval-display').innerText = approval + '%';
+      renderIncidents();
+    }
+
+    function resolveCustom(id) {
+      const input = document.getElementById(`custom-${id}`);
+      if (input && input.value.trim()) {
+        resolveIncident(id, `EXECUTED: ${input.value}`);
+      }
+    }
+
+    // Missile Striking
+    function launchMissile(name) {
+      const log = document.getElementById('missile-log');
+      const time = new Date().toLocaleTimeString();
+      log.innerHTML = `<div class="text-red-400">[${time}] EXECUTIVE COMMAND ISSUED: ${name} launched to sector target.</div>` + log.innerHTML;
+    }
+
+    // Diplomatic System
+    function selectLeader(code) {
+      selectedLeaderCode = code;
+      document.getElementById('current-leader').innerText = code;
+    }
+
+    function sendDiplomaticMsg() {
+      const input = document.getElementById('diplomatic-input');
+      const chat = document.getElementById('diplomatic-chat');
+      if (!input.value.trim()) return;
+
+      const userText = input.value;
+      chat.innerHTML += `<div class="text-cyan-300 text-xs bg-slate-900 p-2 rounded text-right">President of India: ${userText}</div>`;
+      input.value = '';
+
+      setTimeout(() => {
+        chat.innerHTML += `<div class="text-amber-200 text-xs bg-slate-900 p-2 rounded">${selectedLeaderCode}: Direct presidential communication received. High-command cable acknowledged.</div>`;
+        chat.scrollTop = chat.scrollHeight;
+      }, 1000);
+    }
+
+    // Initial Execution
+    renderIncidents();
+  </script>
+</body>
+</html>
+
